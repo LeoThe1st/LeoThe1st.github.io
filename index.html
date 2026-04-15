@@ -1,44 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css">
-    <title>LeoThe1st</title>
-    <link rel="shortcut icon" href="img/picture.png" type="image/x-icon">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>// visit_card</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    background: #000;
+    color: #e6e6e6;
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    -webkit-font-smoothing: none;
+    image-rendering: pixelated;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 560px;
+    border: 2px solid #e6e6e6;
+    padding: 36px 32px;
+    position: relative;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed #333;
+    pointer-events: none;
+  }
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+  .cursor {
+    display: inline-block;
+    width: 10px;
+    height: 16px;
+    background: #e6e6e6;
+    margin-left: 4px;
+    animation: blink 1s steps(1) infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .role {
+    color: #9aff9a;
+    margin-bottom: 24px;
+    font-size: 24px;
+  }
+  .line { color: #666; margin: 18px 0; }
+  ul { list-style: none; }
+  li { padding: 4px 0; font-size: 24px; }
+  li::before { content: "> "; color: #9aff9a; }
+  a { color: #e6e6e6; text-decoration: none; border-bottom: 1px dashed #555; }
+  a:hover { color: #9aff9a; border-color: #9aff9a; }
+  .footer {
+    margin-top: 28px;
+    font-size: 18px;
+    color: #666;
+  }
+</style>
 </head>
 <body>
-    <div class="grid-2">
-        <div class="section-1">
-            <i class="fas fa-code fa-5x white"></i>
-            <h2>Stepan Glonin</h2>
-            <p>Ashgabat, Turkmenistan</p>
-            <a href="https://github.com/LeoThe1st"><i class="fab fa-github"></i></a>
-            <a href="https://t.me/+4Ux3r10bmV03YzBi"><i class="fab fa-telegram"></i></a>
-        </div>
-        <div class="section-2">
-            <h2>About</h2>
-            <p>My name is Stepan. I am 16 years old and I am a novice programmer.</p>
-
-            <h2>Experience</h2>
-            <p>I have no professional expirience. I practice, thereby gaining expirience and learning new things.</p>
-            <p>Now I'm learning python and I plan to write my first projects in this programming language.</p>
-
-            <h2>Skills</h2>
-            <p>HTML / CSS / JavaScript / Python</p>
-
-            <h2>Projects</h2>
-            <a href="https://github.com/LeoThe1st/LeoThe1st.github.io">My website</a>
-            <a href="https://github.com/LeoThe1st/auto_accept_request_tg_bot">Telegram bot</a>
-
-            <h2>Contact</h2>
-            <p>shkalyardata@gmail.com</p>
-        </div>
-    </div>
-    <footer class="footer">
-        <a href="https://github.com/LeoThe1st" class="link footer__link">Created with ❤ by Leonard</a>
-    </footer>
+  <main class="card">
+    <h1>&gt; hello_world<span class="cursor"></span></h1>
+    <div class="role">programmer // infosec student</div>
+    <div class="line">------------------------------------</div>
+    <ul>
+      <li>skills: python, linux, networks</li>
+      <li>focus: offensive &amp; defensive security</li>
+      <li>status: study, break, fix</li>
+    </ul>
+    <div class="line">------------------------------------</div>
+    <ul>
+      <li>mail: <a href="mailto:glonin07@yandex.ru">glonin07@yandex.ru</a></li>
+      <li>github: <a href="https://github.com/LeoThe1st">LeoThe1st</a></li>
+      <li>tg: <a href="https://t.me/retrooo000">@retrooo000</a></li>
+    </ul>
+    <div class="footer">[ press any key to continue ]</div>
+  </main>
 </body>
 </html>
