@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>для тебя.exe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 40%, #0c0e0d 0%, #060607 55%, #000 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    color: #a8a8a8;
+    min-height: 100dvh;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .window {
+    width: min(100vw - 16px, 560px);
+    height: min(100dvh - 16px, 760px);
+    background: linear-gradient(180deg, #0b0c0b 0%, #060706 100%);
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 10px;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 70px rgba(255,122,156,0.05);
+  }
+  .window::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,0.007) 2px 3px);
+  }
+  .titlebar {
+    height: 38px; flex: 0 0 auto;
+    display: flex; align-items: center; padding: 0 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-size: 12px; color: #93a193; letter-spacing: 0.02em;
+  }
+  .titlebar .controls { margin-left: auto; display: flex; gap: 13px; color: #757575; }
+  .controls span { font-size: 11px; line-height: 1; }
+
+  .content {
+    flex: 1 1 auto; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 4px 10px 12px; min-height: 0;
+    gap: clamp(4px, 1.2vh, 14px);
+  }
+  .artwrap {
+    flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+    min-height: 0; width: 100%;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .texts { text-align: center; flex: 0 0 auto; }
+  .tagline {
+    font-size: clamp(8px, 1.4vw, 10px);
+    letter-spacing: 0.28em; text-indent: 0.28em;
+    color: #8a9a88; margin-bottom: clamp(6px, 1.2vh, 14px);
+    white-space: nowrap;
+  }
+  .name {
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-weight: 500; font-size: clamp(22px, 5.5vw, 29px);
+    color: #ff7a9c; text-shadow: 0 0 20px rgba(255,122,156,0.38);
+    margin-bottom: clamp(5px, 1vh, 10px); line-height: 1.15;
+  }
+  .msg1 { font-size: clamp(10px, 1.8vw, 12px); color: #b8d0b0; letter-spacing: 0.04em; margin-bottom: 5px; }
+  .msg2 { font-size: clamp(10px, 1.8vw, 12px); color: #c8d8c0; letter-spacing: 0.04em; }
+
+  .replay {
+    flex: 0 0 auto; font-family: inherit; font-size: 12px;
+    color: #c3c3c3; background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px; min-height: 42px; padding: 10px 24px;
+    cursor: pointer; letter-spacing: 0.03em;
+    transition: border-color .25s, color .25s, box-shadow .25s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+  }
+  .replay:hover, .replay:focus-visible { border-color: rgba(255,122,156,0.5); color: #ffd6e0; box-shadow: 0 4px 20px rgba(255,122,156,0.14); outline: none; }
+  .replay:active { transform: translateY(1px); }
+
+  .cursorline { flex: 0 0 auto; color: rgba(255,255,255,0.16); font-size: 12px; }
+  .blink { animation: blink 1.2s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (max-height: 560px) {
+    .tagline { margin-bottom: 4px; }
+    .name { font-size: 19px; }
+    .replay { padding: 7px 18px; min-height: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <span>для тебя.exe</span>
+    <div class="controls"><span>—</span><span>▢</span><span>✕</span></div>
+  </div>
+  <div class="content">
+    <div class="artwrap"><canvas id="art"></canvas></div>
+    <div class="texts">
+      <div class="tagline">НЕЖНОСТЬ В КАЖДОМ ЛЕПЕСТКЕ</div>
+      <div class="name">Полина</div>
+      <div class="msg1">Удачи на экзаменах!</div>
+      <div class="msg2">Спасибо за то, что ты есть :)</div>
+    </div>
+    <button class="replay" id="replay">Повторить рост</button>
+    <div class="cursorline">— <span class="blink">_</span></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('art');
+  const ctx = canvas.getContext('2d');
+  const TAU = Math.PI * 2;
+  const smoothstep = (value) => {
+    const t = Math.max(0, Math.min(1, value));
+    return t * t * (3 - 2 * t);
+  };
+
+  function wildflowerGrowth(seconds, phase = 0, reduced = false) {
+    if (reduced) return { stem: 1, leaf: 1, bloom: 1, ribbon: 1 };
+    const time = seconds + Math.min(seconds, 0.8);
+    const delay = (0.5 + 0.5 * Math.sin(phase * 2.37)) * 2.1;
+    return {
+      stem: smoothstep((time - delay) / 3.6),
+      leaf: smoothstep((time - 1.6 - delay) / 2.6),
+      bloom: smoothstep((time - 3.4 - delay) / 3.4),
+      ribbon: smoothstep((time - 6.6) / 2.4),
+    };
+  }
+  function bouquetAngle(seconds, reduced = false) {
+    return reduced ? 0 : (Math.sin((seconds * TAU) / 12) * 35 * Math.PI) / 180;
+  }
+
+  function wildflowers() {
+    const points = [];
+    const add = (x, y, z, color, char, phase = 0, part = 'stem') =>
+      points.push({ x, y, z, color, char, light: 1, phase, part, wildflower: true });
+    const palette = (hex) => {
+      const rgb = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+      return Array.from({ length: 9 }, (_, level) =>
+        '#' + rgb.map((v, i) => {
+          const shadow = [61, 55, 65][i], light = [255, 248, 234][i];
+          return Math.round(
+            level < 4 ? shadow + (v - shadow) * (level / 4) : v + (light - v) * ((level - 4) / 6)
+          ).toString(16).padStart(2, '0');
+        }).join(''));
+    };
+    const stem = (x, y, z, phase) => {
+      for (let t = 0; t <= 1; t += 0.009) {
+        const bend = Math.sin(t * Math.PI) * 0.035;
+        const sx = x * (1 - t) + 0.07 * t + bend, sy = y * (1 - t) + 0.96 * t;
+        add(sx, sy, Math.min(-0.08, z - 0.18) * (1 - t) - 0.1 * t, '#85a76b', '|', phase);
+        add(sx + 0.008, sy, Math.min(-0.08, z - 0.18) * (1 - t) - 0.1 * t, '#b4c88b', ':', phase);
+      }
+    };
+    const leaf = (bx, by, tx, ty, z, phase) => {
+      const dx = tx - bx, dy = ty - by, len = Math.hypot(dx, dy);
+      for (let t = 0; t <= 1; t += 0.023)
+        for (let u = -1; u <= 1; u += 0.15) {
+          const width = Math.sin(t * Math.PI) * 0.064;
+          const x = bx + dx * t - (dy / len) * u * width, y = by + dy * t + (dx / len) * u * width;
+          const vein = Math.abs(u) < 0.13 || Math.abs((t * 7 + Math.abs(u) * 1.4) % 1) < 0.1;
+          add(x, y, z + Math.sin(t * Math.PI) * 0.025 - Math.abs(u) * 0.018,
+              vein ? '#bfd39b' : u > 0 ? '#8fb17f' : '#5f926b',
+              vein ? '/' : 'x', phase, 'leaf');
+          const point = points[points.length - 1];
+          point.rootX = bx; point.rootY = by;
+        }
+    };
+    const bloom = (cx, cy, cz, r, color, type, phase) => {
+      const shades = palette(color);
+      const put = (x, y, z, ink, char) => {
+        add(cx + x, cy + y, cz + z, ink, char, phase, 'flower');
+        const point = points[points.length - 1];
+        point.cx = cx; point.cy = cy; point.cz = cz;
+      };
+      stem(cx, cy, cz, phase);
+      if (type === 'rose') {
+        for (let ring = 0; ring < 7; ring++) {
+          const count = 6 + Math.floor(ring / 2), R = r * (1 - ring * 0.13);
+          for (let petal = 0; petal < count; petal++) {
+            const center = (petal * TAU) / count + ring * 0.69 + phase;
+            for (let u = -1; u <= 1; u += 0.12)
+              for (let v = 0; v <= 1; v += 0.075) {
+                const a = center + ((u * Math.PI) / count) * 1.22;
+                const radius = R * (0.46 + 0.54 * v) * (1 - 0.1 * u * u);
+                const rim = v > 0.88, fold = Math.sin(v * Math.PI);
+                const shade = rim ? 8 : Math.max(1, Math.min(7, Math.round(3 + v * 2 + Math.cos(a - 2) * 1.3)));
+                put(Math.cos(a) * radius, Math.sin(a) * radius * 0.84,
+                    ring * 0.022 + fold * 0.04 + (1 - u * u) * 0.018,
+                    shades[shade], rim ? '@' : Math.abs(u) > 0.8 ? ':' : '#');
+              }
+          }
+        }
+        for (let a = 0; a < TAU * 2; a += 0.12) {
+          const radius = (r * 0.1 * a) / (TAU * 2);
+          put(Math.cos(a) * radius, Math.sin(a) * radius * 0.8, 0.17, shades[7], '@');
+        }
+      } else if (type === 'globe') {
+        for (let v = 0; v < Math.PI; v += 0.13)
+          for (let a = 0; a < TAU; a += 0.14) {
+            const x = Math.cos(a) * Math.sin(v) * r, y = Math.cos(v) * r, z = Math.sin(a) * Math.sin(v) * r;
+            put(x, y, z, shades[Math.round(4 + Math.sin(a) * 2)], Math.round((a + v) * 13) % 3 ? 'o' : '@');
+          }
+      } else {
+        const count = type === 'blue' ? 5 : type === 'daisy' ? 11 : 8;
+        for (let petal = 0; petal < count; petal++) {
+          const a = (petal * TAU) / count + phase;
+          for (let v = 0.08; v <= 1; v += 0.07)
+            for (let u = -1; u <= 1; u += 0.16) {
+              const rr = r * (0.12 + 0.88 * v), width = Math.sin(v * Math.PI) * r * (type === 'blue' ? 0.38 : 0.2);
+              const x = Math.cos(a) * rr - Math.sin(a) * u * width, y = Math.sin(a) * rr + Math.cos(a) * u * width;
+              const rim = Math.abs(u) > 0.83 || v > 0.93;
+              put(x, y * 0.88, Math.sin(v * Math.PI) * r * 0.4 - Math.abs(u) * r * 0.07,
+                  shades[rim ? 7 : Math.abs(u) < 0.18 ? 8 : 5], rim ? '+' : Math.abs(u) < 0.18 ? '#' : '*');
+            }
+        }
+        const core = r * (type === 'blue' ? 0.16 : 0.24);
+        for (let y = -core; y <= core; y += Math.max(0.005, r * 0.1))
+          for (let x = -core; x <= core; x += Math.max(0.005, r * 0.1))
+            if (x * x + y * y < core * core)
+              put(x, y, 0.065, '#f6d46e', (Math.round(x * 200) + Math.round(y * 200)) % 3 ? 'o' : '@');
+      }
+    };
+
+    for (const [cx, cy, z] of [
+      [-0.58, -0.82, -0.12], [0.38, -0.81, -0.1], [-0.76, -0.42, -0.1], [0.68, -0.21, -0.09],
+    ]) {
+      stem(cx, cy, z, cx * 8);
+      for (let j = 0; j < 5; j++) {
+        const x = cx + Math.sin(j * 2.7 + cx) * 0.085, y = cy + j * 0.093;
+        bloom(x, y, z + 0.015 * j, 0.055 + (j % 2) * 0.012, j % 3 ? '#b9d7ed' : '#f0eee2', 'blue', j + cx * 3);
+      }
+    }
+    const leaves = [
+      [-0.02, 0.65, -0.73, 0.25, -0.05],
+      [0.08, 0.61, 0.74, 0.2, -0.05],
+      [-0.12, 0.34, -0.82, -0.05, -0.04],
+      [0.19, 0.36, 0.81, -0.02, -0.04],
+      [-0.25, -0.01, -0.66, -0.58, -0.1],
+      [0.19, -0.25, 0.46, -0.91, -0.15],
+      [0.03, 0.5, -0.42, 0.58, 0.22],
+      [0.11, 0.5, 0.52, 0.45, 0.24],
+      [-0.05, 0.22, -0.57, -0.02, 0.25],
+      [0.17, 0.25, 0.55, -0.13, 0.28],
+    ];
+    leaves.forEach((a, i) => leaf(...a, i * 0.9));
+    const mains = [
+      [-0.42, -0.27, 0.1, 0.225, '#edb3c6', 'rose'],
+      [0.02, -0.55, 0.05, 0.21, '#edc6a3', 'rose'],
+      [0.01, -0.23, 0.22, 0.19, '#efd3ba', 'rose'],
+      [0.16, 0.11, 0.34, 0.145, '#eab49f', 'rose'],
+      [0.39, 0.12, 0.25, 0.252, '#dca1b6', 'rose'],
+      [-0.46, 0.18, 0.26, 0.185, '#f0dec0', 'rose'],
+      [-0.08, 0.35, 0.34, 0.205, '#efcbbb', 'rose'],
+      [-0.15, -0.02, 0.24, 0.135, '#edae8b', 'rose'],
+      [0.52, -0.36, 0.08, 0.105, '#d7c5e7', 'blue'],
+      [0.55, 0.39, 0.34, 0.11, '#d3c3e6', 'blue'],
+      [-0.68, -0.49, 0.1, 0.095, '#cfb9de', 'blue'],
+      [0.26, -0.85, -0.05, 0.075, '#ead478', 'daisy'],
+      [0.73, -0.66, 0.05, 0.083, '#e6cf64', 'globe'],
+      [-0.77, 0.34, 0.22, 0.077, '#e8d66e', 'globe'],
+      [0.39, -0.08, 0.34, 0.1, '#f0d980', 'daisy'],
+      [0.23, 0.33, 0.47, 0.095, '#ebd375', 'daisy'],
+      [-0.4, 0.53, 0.34, 0.085, '#ead575', 'daisy'],
+    ];
+    mains.forEach((a, i) => bloom(...a, i * 0.73));
+    for (let branch = 0; branch < 7; branch++) {
+      const bx = -0.52 + branch * 0.155, by = -0.22 + (branch % 3) * 0.17;
+      for (let j = 0; j < 5; j++) {
+        const a = j * 2.4 + branch * 0.7;
+        const x = bx + Math.cos(a) * (0.06 + j * 0.017), y = by + Math.sin(a) * (0.08 + j * 0.015);
+        bloom(x, y, 0.5 + (j % 2) * 0.025, 0.028 + (j % 3) * 0.006, '#f4f0df', 'daisy', branch + j * 0.8);
+      }
+    }
+    for (const [x, y] of [[-0.47, -0.02], [-0.2, 0.18], [0.09, 0.08], [0.46, -0.53], [-0.38, -0.66]])
+      bloom(x, y, 0.4, 0.068, '#bed8ed', 'blue', x * 17);
+    for (let side of [-1, 1]) {
+      for (let a = 0; a < TAU; a += 0.035)
+        for (let u = -1; u <= 1; u += 0.18) {
+          const x = 0.065 + side * (0.035 + 0.16 * (1 - Math.cos(a))), y = 0.63 + Math.sin(a) * 0.073 + u * 0.018;
+          add(x, y, 0.55 + Math.cos(a) * 0.02,
+              Math.abs(u) > 0.8 ? '#f5e9d8' : u > 0 ? '#d8c7b5' : '#ad9f98',
+              Math.abs(u) > 0.8 ? '+' : '=', a, 'ribbon');
+        }
+    }
+    for (let tail = 0; tail < 2; tail++)
+      for (let t = 0; t < 1; t += 0.009)
+        for (let u = -1; u <= 1; u += 0.16) {
+          const x = tail === 0 ? 0.12 + t * 0.79 : 0.02 - Math.sin(t * 3) * 0.14;
+          const y = tail === 0 ? 0.64 + Math.sin(t * 5) * 0.045 : 0.65 + t * 0.35;
+          add(x + u * 0.01, y + u * 0.045, 0.54 + Math.sin(t * 7) * 0.04,
+              Math.abs(u) > 0.85 ? '#f4e7d4' : u > 0 ? '#ddcdb9' : '#a49b94',
+              Math.abs(u) > 0.85 ? '~' : '=', t * 5, 'ribbon');
+        }
+    return points;
+  }
+
+  const points = wildflowers();
+  const bounds = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
+  for (const p of points) {
+    const radius = Math.hypot(p.x, p.z);
+    const extent = radius * (1 + radius * 0.09);
+    bounds.left = Math.min(bounds.left, -extent);
+    bounds.right = Math.max(bounds.right, extent);
+    bounds.top = Math.min(bounds.top, p.y);
+    bounds.bottom = Math.max(bounds.bottom, p.y);
+  }
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let frame, visible = true, start = null, disposed = false;
+  let grown = false;
+  let lastFrame = 0, previousTime = performance.now();
+  const flowerMotion = new Map();
+  const growthByPhase = new Map();
+
+  function draw(now) {
+    if (disposed) return;
+    if (!reduced.matches && now - lastFrame < 32) return;
+    lastFrame = now;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#080b0a';
+    ctx.fillRect(0, 0, w, h);
+
+    if (start === null) start = now;
+    const t = reduced.matches ? 8 : (now - start) / 1000;
+    if (t >= 8) grown = true;
+    const delta = Math.min(0.08, (now - previousTime) / 1000);
+    previousTime = now;
+    const rotation = bouquetAngle(t, reduced.matches);
+    const scale = Math.min((w - 36) / (bounds.right - bounds.left), (h - 36) / (bounds.bottom - bounds.top));
+    const originX = w / 2 - ((bounds.left + bounds.right) * scale) / 2;
+    const originY = h / 2 - ((bounds.top + bounds.bottom) * scale) / 2;
+    const fontSize = Math.max(5.4, Math.min(11, scale * 0.03));
+    const cellW = fontSize * 0.61, cellH = fontSize * 1.12;
+    const cols = Math.ceil(w / cellW), rows = Math.ceil(h / cellH);
+    ctx.font = `600 ${fontSize}px "JetBrains Mono", Consolas, "Liberation Mono", monospace`;
+    ctx.textAlign = 'center';
+
+    for (let i = 0; i < 21; i++) {
+      ctx.globalAlpha = 0.1 + (Math.sin(t * 0.7 + i) + 1) * 0.12;
+      ctx.fillStyle = i % 4 ? '#c5d2bd' : '#efa4c7';
+      ctx.fillText(i % 3 ? '.' : '+', (((i * 73.79) % 100) / 100) * w, (((i * 47.13) % 100) / 100) * h);
+    }
+
+    const cells = new Map();
+    const reveal = reduced.matches ? 3 : Math.min(3, t * 1.7);
+    for (const p of points) {
+      let px = p.x, py = p.y, pz = p.z, opacity = 1;
+      // Рост пересчитывается от текущего t (кэш по фазе — только на кадр).
+      let growth = growthByPhase.get(p.phase);
+      if (growth === undefined || growth.__t !== t) {
+        growth = wildflowerGrowth(t, p.phase, reduced.matches);
+        growth.__t = t;
+        growthByPhase.set(p.phase, growth);
+      }
+      if (p.part === 'stem') {
+        if ((0.96 - p.y) / 2.04 > growth.stem || growth.stem === 0) continue;
+      } else if (p.part === 'leaf') {
+        if (growth.leaf < 0.015 || (0.96 - p.rootY) / 2.04 > growth.stem) continue;
+        px = p.rootX + (px - p.rootX) * growth.leaf;
+        py = p.rootY + (py - p.rootY) * growth.leaf;
+        opacity = Math.min(1, growth.leaf * 3);
+      } else if (p.part === 'flower') {
+        if (growth.bloom < 0.005) continue;
+        const opening = growth.bloom;
+        px = p.cx + (px - p.cx) * (0.12 + 0.88 * opening);
+        py = p.cy + (py - p.cy) * (0.3 + 0.7 * opening);
+        pz = p.cz + (pz - p.cz) * (0.35 + 0.65 * opening);
+        opacity = 0.35 + 0.65 * opening;
+      } else if (p.part === 'ribbon') {
+        if (growth.ribbon < 0.01) continue;
+        px = 0.065 + (px - 0.065) * growth.ribbon;
+        py = 0.63 + (py - 0.63) * growth.ribbon;
+        opacity = growth.ribbon;
+      }
+      if (!reduced.matches) {
+        let movement = flowerMotion.get(p.phase);
+        if (!movement) {
+          movement = [
+            Math.sin(t * 0.85 + p.phase) * 0.013,
+            Math.sin(t * 0.68 + p.phase) * 0.004,
+            1 + Math.sin(t * 0.9 + p.phase) * 0.018,
+            Math.sin(t * 1.5 + p.phase * 1.4) * 0.028,
+            Math.sin(t * 1.2 + p.phase) * 0.018,
+          ];
+          flowerMotion.set(p.phase, movement);
+        }
+        const flex = Math.max(0, 0.82 - p.y);
+        px += movement[0] * flex;
+        py += movement[1] * flex;
+        if (p.part === 'flower') { px = p.cx + (px - p.cx) * movement[2]; py = p.cy + (py - p.cy) * movement[2]; }
+        if (p.part === 'ribbon') { py += movement[3] * Math.min(1, Math.abs(p.x) * 2); pz += movement[4]; }
+      }
+      if (py > reveal - 1.15) continue;
+      const angle = rotation;
+      const x = px * Math.cos(angle) + pz * Math.sin(angle);
+      const z = pz * Math.cos(angle) - px * Math.sin(angle);
+      const perspective = 1 + z * 0.09;
+      const col = Math.round((originX + x * scale * perspective) / cellW);
+      const row = Math.round((originY + (py + Math.sin(t * 0.6) * 0.008) * scale) / cellH);
+      if (col < 0 || col >= cols || row < 0 || row >= rows) continue;
+      const key = row * cols + col;
+      if (!cells.has(key) || z > cells.get(key).z) cells.set(key, { p, z, col, row, opacity });
+    }
+    for (const { p, z, col, row, opacity } of cells.values()) {
+      ctx.globalAlpha = Math.min(1, 0.55 + (p.light || 0.85) * 0.5 + z * 0.08) * opacity;
+      ctx.fillStyle = p.color;
+      ctx.fillText(p.char, col * cellW, row * cellH);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  const observer = new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    if (visible) kick();
+  });
+  observer.observe(canvas);
+  const resize = new ResizeObserver(() => { if (visible) kick(); });
+  resize.observe(canvas);
+
+  function replay() {
+    start = null; grown = false; lastFrame = 0;
+    previousTime = performance.now();
+    flowerMotion.clear(); growthByPhase.clear();
+    kick();
+  }
+  document.getElementById('replay').addEventListener('click', replay);
+
+  const visibility = () => {
+    if (!document.hidden && visible) kick();
+  };
+  document.addEventListener('visibilitychange', visibility);
+
+  // rAF-страховка: показываем полностью выросший букет, если анимация
+  // не успевает дойти до конца (скрытая вкладка, медленный превью-движок).
+  // После полного роста букет продолжает вращаться бесконечно.
+  function kick() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(next);
+  }
+  function next(ts) {
+    draw(ts);
+    // до конца роста крутим ради анимации роста; после — только вращение.
+    if (!grown && ts - start < 12000) {
+      frame = requestAnimationFrame(next);
+    } else {
+      frame = requestAnimationFrame(rotateOnly);
+    }
+  }
+  function rotateOnly(ts) {
+    draw(ts);
+    frame = requestAnimationFrame(rotateOnly);
+  }
+  // страховочный таймер: если кадры не довели анимацию до конца,
+  // рисуем финальное состояние принудительно.
+  setTimeout(() => { if (!grown) { start = 0; draw(99999); } }, 10000);
+
+  kick();
+})();
+</script>
+</body>
+</html>
